@@ -1,0 +1,43 @@
+SET SERVEROUTPUT ON
+--variabile PL/SQL
+
+--scalare (doar o sg data)
+--composite
+
+
+--pentru afisarea informatiilor intr un bloc pl/sql se pot folosi mai multe functii ce se regasesc in pachetul DBMS_OUTPUT
+--vom utiliza functia put_line afis si trece pe linia urm
+
+
+--Bind variables (NON/SQL)
+
+--1.sa se afiseze numele,venitul total si vechimea angajatului citit de la tastatura
+--2.sa se mareasca cu 100 salariul unui angajat cu id ul citit de la tast
+
+--Obeservatie: La inceputul fiecarei sesiune de lucru se va rula inaintea definirii oricarui bloc comanda SET SERVEROUTPUT ON
+
+accept g_id prompt 'Introduceti id ul unui angajat:'
+
+accept g_id prompt 'Introduceti id ul unui angajat:'
+declare
+    v_salariul angajati.salariul%type;
+    v_id angajati.id_angajat%type := &g_id;
+begin   
+    update angajati set salariul = salariul + 100 where id_angajat = v_id;
+    select salariul into v_salariul from angajati where id_angajat = g_id;
+    DBMS_OUTPUT.put_line('Angajatul cu id-ul' || v_id || 'are salariul de '|| v_salariul);  
+end;
+/
+accept g_id prompt 'Introduceti id ul unui angajat:'
+declare
+    v_nume angajati.nume%type;
+    v_venit number;
+    v_vechime number(2);
+    v_id angajati.id_angajat%type := &g_id;
+begin
+    select nume,(sysdate - data_angajare)/365,salariul*(1 + nvl(comision,0)) into v_nume,v_vechime,v_venit
+    from angajati
+    where id_angajat = v_id;
+    DBMS_OUTPUT.put_line('Angajatul ' || v_id  || ' se numeste ' || v_nume || ' si are vechimea ' || trunc(v_vechime) || ' si are venitul ' || v_venit); 
+end;
+/
