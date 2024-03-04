@@ -1,0 +1,101 @@
+  set serveroutput on
+--structuri alternative
+
+accept g_id prompt 'Introduceti id ul angajatului'
+declare
+    v_id angajati.id_angajat%type := &g_id;
+    v_nume angajati.nume%type;
+    v_salariu angajati.salariul%type;
+    v_nrcomenzi number;
+begin
+    select nume,salariul into v_nume,v_salariu from angajati where id_angajat = v_id;
+    dbms_output.put_line('Angajatul ' || v_nume || ' are salariul initial ' || v_salariu);
+    select count(id_angajat) into v_nrcomenzi from comenzi where id_angajat = v_id;
+    dbms_output.put_line('el a intermediat ' || v_nrcomenzi);
+    
+    if v_nrcomenzi between 4 and 8 then 
+        v_salariu := v_salariu * 1.1;
+    elsif v_nrcomenzi > 8 then
+        v_salariu := v_salariu*1.2;
+    end if;
+    update angajati set salariul = v_salariu where id_angajat=v_id;
+    dbms_output.put_line('Angajatul cu ' || v_nume || ' va castiga in urma actualizarii salariul ' || v_salariu);
+end;
+/   
+
+--2
+declare  
+    v_nume angajati.nume%type;
+    v_salariul angajati.salariul%type;
+begin
+    for v_id in 100..110 loop
+        select nume,salariul into v_nume,v_salariul from angajati where id_angajat = v_id;
+        dbms_output.put_line('Angajatul cu id-ul ' || v_id || ' se numeste ' || v_nume || ' si are salariul ' || v_salariul);
+    end loop;
+end;
+/
+
+--3
+declare
+    v_nume angajati.nume%type;
+    v_salariul angajati.salariul%type;
+    v_min angajati.id_angajat%type;
+    v_max angajati.id_angajat%type;
+begin
+    select min(id_angajat),max(id_angajat) into v_min,v_max from angajati;
+    dbms_output.put_line('Id minim:' || v_min || ' si id maxim:' || v_max);
+    for v_id in v_min..v_max loop
+        select nume,salariul into v_nume,v_salariul from angajati where id_angajat = v_id;
+        dbms_output.put_line('Angajatul cu id-ul ' || v_id || ' se numeste ' || v_nume || ' si are salariul ' || v_salariul);
+        end loop;
+end;
+/
+
+--elimin angajat cu id 200
+delete from angajati where id_angajat = 150;
+
+
+--Afisati acum lista tuturor angajatiilor
+declare
+    v_nume angajati.nume%type;
+    v_salariul angajati.salariul%type;
+    v_min angajati.id_angajat%type;
+    v_max angajati.id_angajat%type;
+    v_test number;
+begin
+    select min(id_angajat),max(id_angajat) into v_min,v_max from angajati;
+    dbms_output.put_line('Id minim:' || v_min || ' si id maxim:' || v_max);
+    for v_id in v_min..v_max loop
+        select count(v_id) into v_test from angajati where id_angajat = v_id;
+        if v_test = 1 then
+            select nume,salariul into v_nume,v_salariul from angajati where id_angajat = v_id;
+            dbms_output.put_line('Angajatul cu id-ul ' || v_id || ' se numeste ' || v_nume || ' si are salariul ' || v_salariul);
+        else 
+            dbms_output.put_line('Angajatul cu id-ul ' || v_id || ' nu exista');
+        end if;
+        end loop;
+end;
+/
+
+--Afisti in alt mod
+declare
+    v_nume angajati.nume%type;
+    v_salariul angajati.salariul%type;
+    v_min angajati.id_angajat%type;
+    v_max angajati.id_angajat%type;
+    v_test number;
+begin
+    select min(id_angajat),max(id_angajat) into v_min,v_max from angajati;
+    dbms_output.put_line('Id minim:' || v_min || ' si id maxim:' || v_max);
+    for v_id in v_min..v_max loop
+        --select count(v_id) into v_test from angajati where id_angajat = v_id;
+        
+        if v_test = 1 then
+            select nume,salariul into v_nume,v_salariul from angajati where id_angajat = v_id;
+            dbms_output.put_line('Angajatul cu id-ul ' || v_id || ' se numeste ' || v_nume || ' si are salariul ' || v_salariul);
+        else 
+            dbms_output.put_line('Angajatul cu id-ul ' || v_id || ' nu exista');
+        end if;
+        end loop;
+end;
+/
