@@ -1,0 +1,91 @@
+set SERVEROUTPUT on;
+--1. Afisați numele, funcția si data angajarii pentru acei angajati care au intrat
+--în firmă într-un anumit an, citit de la tastatură. 
+
+declare 
+    v_nume angajati.nume%type;
+    v_functie angajati.id_functie%type;
+    v_data angajati.data_angajare%type;
+    v_an number:=&an;
+begin 
+    select nume,id_functie,data_angajare into v_nume,v_functie,v_data
+    from angajati
+    where extract(year from data_angajare) = v_an;
+    dbms_output.put_line(v_nume || ' ' || v_data);
+exception
+    when no_data_found then
+        dbms_output.put_line('In anul ' || v_an || ' nu a fost angajat personal nou!' );
+    when too_many_rows then
+        dbms_output.put_line('In anul ' || v_an || ' au fost angajate multiple persoane!' );
+        declare
+            cursor c_ang is select nume,id_functie,data_angajare from angajati
+            where extract(year from data_angajare) = v_an;
+        begin
+            for ang in c_ang loop
+                dbms_output.put_line(ang.nume || ' ' || ang.data_angajare);
+            end loop;
+        end;
+    when others then
+        dbms_output.put_line('A aparut o alta problema');
+end;
+/
+
+
+
+--2
+
+declare
+nn_exception exception;
+pragma exception_init(nn_exception,-02290);
+
+begin
+    insert into departamente(id_departament) values (300);
+    dbms_output.put_line('Am adugat departamentul');
+exception 
+    when nn_exception then 
+        dbms_output.put_line('Nu puteti adauga un dep fara denumire');
+        dbms_output.put_line(SQLERRM);
+end;
+/
+
+
+--3
+
+declare
+ang_exception exception;
+begin
+    update angajati set salariul = salariul*1.30 where id_angajat = &v_id_angajat;
+    if sql%notfound then
+        raise ang_exception;
+    else
+        dbms_output.put_line('A fost marit salariul!');
+    end if;
+exception
+    when ang_exception then
+        dbms_output.put_line('Nu exista angajatul pt care se doreste marirarea salariului!');
+end;
+/
+
+--4.  Intr-un bloc Pl/SQL afisati numele unui angajat, al carui id este citit de la tastatura.
+--De asemenea, calculați numarul de comenzi gestionate de catre angajatul respectiv. 
+--Afisati numele angajatului , iar daca acesta exista și s-a ocupat de comenzi, afișați numarul acestora.
+--Dacă angajatul nu există, tratați excepția cu o rutină de tratare corespunzătoare, iar dacă angajatul nu s-a ocupat de nici o comandă, invocați o excepție, care se va trata corespunzător. 
+--Tratați orice altă excepție cu o rutină de tratare corespunzătoare.
+
+
+declare 
+    v_id_angajat angajati.id_angajat%type := &v_id;
+    v_nume angajati.nume%type;
+    v_count
+
+begin
+    select nume into v_nume from angajati where v_id_angajat = id_angajat;
+    dbms_output.put_line('Numele cu id-ul' || v_id_angajat || ' este ' || v_nume);
+    
+    select count(id_angajat) into  from comenzi where id_angajat = v_id_angajat;
+exception
+    when no_data_found then
+        dbms_output.put_line('Nu s-a gasit acest angajator!' );
+end;
+/
+
