@@ -1,0 +1,32 @@
+set serveroutput on
+
+--1.Realizati o procedura Pl/SQL prin intermediul careia sa mariti cu 20% salariul angajatilor comisionati,
+--care au intermediat minim 3 comenzi intr-un an transmis ca parametru. Returnati numarul de angajati pentru care se realizeaza aceasta actualizare, sau tratati in mod corespunzator o exceptie daca nu exista nici un angajat pentru care se modifica salariul.
+--Apelati procedura si afisati numarul de angajati carora li s-a modificat salariul.
+
+
+create or replace procedure marire_sal_an(p_an in number,p_nr out number)
+is
+    e_inexistena exception;
+begin
+    update angajati set salariul = salariul*1.2 where id_angajat  in (select id_angajat from comenzi 
+                        where extract(year from data) = p_an
+                        group by id_angajat
+                        having count(id_angajat) >= 3);
+    if sql%found then
+        p_nr:=sql%rowcount;
+    else
+        raise e_inexistena;
+    end if;
+exception
+    when e_inexistena then
+        p_nr:=0;       
+end;
+/
+
+declare 
+    p_nr number := 0;
+begin
+    marire_sal_an(&an,p_nr);
+    dbms_output.put_line('S au modificat ' || p_nr || ' instructiuni');
+end;
