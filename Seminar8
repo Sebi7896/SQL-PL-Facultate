@@ -1,0 +1,119 @@
+set serveroutput on
+
+
+
+--2Realizati o functie Pl/SQL care sa returneze categoria
+--in care se incadreaza un angajat al carui id este transmis ca parametru.
+--Angajatii cu salariul mai mic de 3000 sunt junior, cei cu salariul intre 3000 and 7000 mid-level
+--, iar cei cu salariul peste 7000 sunt incadrati la senior.
+--Tratati exceptia care apare daca angajatul pentru care se face verificarea nu exista.(returnam un mesaj corespunzator).
+
+
+create or replace function categ_angajati(p_id angajati.id_angajat%type) 
+return varchar2
+is
+v_sal angajati.salariul%type;
+v_categorie varchar2(25);
+begin
+    select salariul into v_sal from angajati where id_angajat = p_id;
+    if v_sal<3000 then
+        v_categorie  :='junior';
+    elsif v_sal between 3000 and 7000 then
+        v_categorie := 'mid_level';
+        else v_categorie := 'senior';
+    end if;
+    return v_categorie;
+exception 
+    when no_data_found then
+        return 'Nu exista angajati cautat';
+end;
+/
+
+
+select nume,salariul,categ_angajati(id_angajat) categorie
+from angajati;
+
+
+/*
+Construiti un pachet care sa contina:
+- o functie care returneaza numarul de comenzi încheiate de
+catre clientul al carui id este dat ca parametru. Tratati cazul în
+care nu exista clientul specificat precum si cazul in care acesta nu a plasat comenzi;
+- o procedura care foloseste functia de mai sus pentru a returna
+primii 3 clienti cu cele mai multe comenzi încheiate.
+• Sa se apeleze procedura din cadrul pachetului.
+*/
+
+create or replace package pack as 
+    function numar_comezi(p_id clienti.id_client%type) return number;
+    procedure top3_clienti;
+end pack;
+/
+
+create or replace package body pack as 
+    function nr_comezi(p_id clienti.id_client%type) return number
+    is 
+        nr_cl number;
+        nr_comenzi number;
+        client_inexistent exception;
+        comenzi_zero exception;
+     begin
+     select count(id_client) into nr_cl from clienti where id_client = p_id;
+    if nr_cl = 0 then
+        raise client_inexistent;
+    end if;
+    select count(id_client) into nr_comenzi1 from comenzi where id_client=p_id;
+    if nr_comenzi = 0 then 
+        raise comenzi_zero;
+    else 
+        return nr_comenzi1;
+    end if;
+exception
+    when client_inexistent then
+        return -1;
+    when comenzi_zero then 
+        return 0;
+    end;
+    
+    procedure top3_clienti
+    is 
+    cursor c_clienti is select 
+        nume_client,numar_comenzi(id_client) nr_com from clienti
+        order by nr_com desc
+        fetch first 3 rows only;
+    begin
+        for rec_client in c_clienti loop
+            dbms_output.put_line(rec_client.nume_client || ' ' || rec_client.nr_comenzi1);
+        end loop;
+    end;
+end;
+/
+
+begin 
+pack.nr_comenzi(&v_id);
+dbms_output.put_line(pack.numar_comenzi(&v_id) ||  ' ' || rec_client.nr_com);
+dbms_output.put_line('urmeaza lista de clienti!');
+pack.top3_clienti;
+end;
+
+
+--ã se creeze o functie care sa returneze numele complet al angajatului dat ca parametru. Apelati functia in comanda SQL (Select)
+
+create or replace function nume_complet(p_id angajati.id_angajat%type) 
+return varchar2
+is
+    nume varchar2(40);
+begin
+    select concat(nume,prenume) into nume from angajati where id_angajat = p_id;
+    return nume;
+end;
+/
+begin
+    dbms_output.put_line(nume_complet(&p_id));
+end;
+
+
+
+
+
+
