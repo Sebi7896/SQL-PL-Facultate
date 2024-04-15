@@ -1,0 +1,93 @@
+set serveroutput on;
+
+--1Realizati un trigger care sa nu permita actualizarea limitei de credite a
+--clientilor intre datele de 28 si 31 ale lunii (in vedere incheierii
+--situatiilor financiare lunare). Să se verifice declanșatorul.
+
+create or replace trigger limita_credit
+before update of limita_credit on clienti
+declare
+v_zi number;
+begin
+    select extract(day from sysdate) into v_zi from dual;
+    if v_zi between 15 and 31 then
+        raise_application_error(-20100,'Nu puteti modifica in perioada 28-31');
+    end if;
+end;
+/
+update clienti
+set limita_credit = 100;
+
+
+--2Realizati un trigger care sa nu permita existenta unor valori negative
+--ale salariului. Să se verifice declanșatorul.
+
+create or replace trigger salariu_negativ
+before insert or update of salariul on angajati
+for each row
+BEGIN
+    if :new.salariul < 0 then
+        raise_application_error(-20100,'Nu putem avea salariu sub 0');
+    end if;
+end;
+/
+
+update angajati set salariul = -100 where id_angajat between 100 and 110;
+
+/*Să se adauge în tabela Produse coloana Stoc. Să se introducă valoarea
+2000 în coloana nou adăugată. Să se creeze un trigger care să nu
+permită comandarea unui produs în cantitate mai mare decât stocul
+aferent. Totodată, pentru produsele comandate, prin trigger se va
+diminua stocul cu valoarea comandată. Să se verifice declanșatorul.
+*/
+
+alter table produse add stoc number default 2000;
+desc produse
+
+
+create or replace trigger stocuri
+before insert or update of cantitate on rand_comenzi
+for each row
+declare
+    v_stoc produse.stoc%type;
+begin
+    select stoc into v_stoc from produse where id_produs = :new.id_produs;
+    if v_stoc < :new.cantitate then
+        raise_application_error(-20100,'Nu avem stoc suficient!');
+    elsif inserting then 
+        update produse set stoc =stoc - :new.cantitate where id_produs = :new.id_produs;
+    elsif
+        update produse set stoc = stoc + :old.cantitate - :new.cantitate
+        where id_produs = :new.id_produs;
+    end if;
+end;
+        
+
+update rand_comenzi 
+set cantitate = 9000 
+where id_produs = 1781;
+
+update rand_comenzi 
+set cantitate = 900 
+where id_produs = 1781;
+
+select stoc from produse where id_produs = 1781;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
